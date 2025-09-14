@@ -5,7 +5,7 @@ const cors = require('cors');
 const lockfile = require('proper-lockfile');
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000; // Use Render port if available
 const DB_FILE = path.join(__dirname, 'db.json');
 
 // Middleware
@@ -16,31 +16,33 @@ app.use(express.json());
 const initializeDB = async () => {
   try {
     await fs.access(DB_FILE);
-    // Validate JSON structure
     const data = await fs.readFile(DB_FILE, 'utf8');
     if (!data.trim()) {
-      console.log('db.json is empty, initializing with default structure');
-      await fs.writeFile(DB_FILE, JSON.stringify({ products: [], transactions: [], customers: [] }, null, 2));
+      console.log('db.json is empty, initializing default structure');
+      await fs.writeFile(
+        DB_FILE,
+        JSON.stringify({ products: [], transactions: [], customers: [] }, null, 2)
+      );
     } else {
-      JSON.parse(data); // Test parsing
+      JSON.parse(data);
     }
   } catch (error) {
     console.log('Initializing db.json due to error:', error.message);
-    await fs.writeFile(DB_FILE, JSON.stringify({ products: [], transactions: [], customers: [] }, null, 2));
+    await fs.writeFile(
+      DB_FILE,
+      JSON.stringify({ products: [], transactions: [], customers: [] }, null, 2)
+    );
   }
 };
 initializeDB();
 
-// Helper function to read database with locking
+// Helper: read DB with locking
 const readDB = async () => {
   let release;
   try {
     release = await lockfile.lock(DB_FILE);
     const data = await fs.readFile(DB_FILE, 'utf8');
-    if (!data.trim()) {
-      console.error('db.json is empty');
-      throw new Error('Database file is empty');
-    }
+    if (!data.trim()) throw new Error('Database file is empty');
     return JSON.parse(data);
   } catch (error) {
     console.error('Error reading db.json:', error.message);
@@ -50,21 +52,23 @@ const readDB = async () => {
   }
 };
 
-// Helper function to write to database with locking
+// Helper: write DB with locking
 const writeDB = async (data) => {
   let release;
   try {
     release = await lockfile.lock(DB_FILE);
     await fs.writeFile(DB_FILE, JSON.stringify(data, null, 2));
   } catch (error) {
-    console.error('Error writing to db.json:', error.message);
+    console.error('Error writing db.json:', error.message);
     throw error;
   } finally {
     if (release) await release();
   }
 };
 
-// Get all products
+// --- Routes ---
+
+// Products
 app.get('/api/products', async (req, res) => {
   try {
     const db = await readDB();
@@ -74,7 +78,6 @@ app.get('/api/products', async (req, res) => {
   }
 });
 
-// Add new product
 app.post('/api/products', async (req, res) => {
   try {
     const db = await readDB();
@@ -94,15 +97,12 @@ app.post('/api/products', async (req, res) => {
   }
 });
 
-// Update product
 app.put('/api/products/:id', async (req, res) => {
   try {
     const db = await readDB();
     const productId = parseInt(req.params.id);
-    const productIndex = db.products.findIndex(p => p.id === productId);
-    if (productIndex === -1) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
+    const productIndex = db.products.findIndex((p) => p.id === productId);
+    if (productIndex === -1) return res.status(404).json({ error: 'Product not found' });
     const updatedProduct = {
       id: productId,
       name: req.body.name,
@@ -119,15 +119,12 @@ app.put('/api/products/:id', async (req, res) => {
   }
 });
 
-// Delete product
 app.delete('/api/products/:id', async (req, res) => {
   try {
     const db = await readDB();
     const productId = parseInt(req.params.id);
-    const productIndex = db.products.findIndex(p => p.id === productId);
-    if (productIndex === -1) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
+    const productIndex = db.products.findIndex((p) => p.id === productId);
+    if (productIndex === -1) return res.status(404).json({ error: 'Product not found' });
     db.products.splice(productIndex, 1);
     await writeDB(db);
     res.status(204).send();
@@ -136,7 +133,7 @@ app.delete('/api/products/:id', async (req, res) => {
   }
 });
 
-// Get all customers
+// Customers
 app.get('/api/customers', async (req, res) => {
   try {
     const db = await readDB();
@@ -146,7 +143,6 @@ app.get('/api/customers', async (req, res) => {
   }
 });
 
-// Add new customer
 app.post('/api/customers', async (req, res) => {
   try {
     const db = await readDB();
@@ -164,15 +160,12 @@ app.post('/api/customers', async (req, res) => {
   }
 });
 
-// Update customer
 app.put('/api/customers/:id', async (req, res) => {
   try {
     const db = await readDB();
     const customerId = parseInt(req.params.id);
-    const customerIndex = db.customers.findIndex(c => c.id === customerId);
-    if (customerIndex === -1) {
-      return res.status(404).json({ error: 'Customer not found' });
-    }
+    const customerIndex = db.customers.findIndex((c) => c.id === customerId);
+    if (customerIndex === -1) return res.status(404).json({ error: 'Customer not found' });
     const updatedCustomer = {
       id: customerId,
       name: req.body.name,
@@ -187,15 +180,12 @@ app.put('/api/customers/:id', async (req, res) => {
   }
 });
 
-// Delete customer
 app.delete('/api/customers/:id', async (req, res) => {
   try {
     const db = await readDB();
     const customerId = parseInt(req.params.id);
-    const customerIndex = db.customers.findIndex(c => c.id === customerId);
-    if (customerIndex === -1) {
-      return res.status(404).json({ error: 'Customer not found' });
-    }
+    const customerIndex = db.customers.findIndex((c) => c.id === customerId);
+    if (customerIndex === -1) return res.status(404).json({ error: 'Customer not found' });
     db.customers.splice(customerIndex, 1);
     await writeDB(db);
     res.status(204).send();
@@ -204,34 +194,26 @@ app.delete('/api/customers/:id', async (req, res) => {
   }
 });
 
-// Handle stock transactions
+// Transactions
 app.post('/api/transactions', async (req, res) => {
   try {
     const db = await readDB();
     const { productId, customerId, quantity, type } = req.body;
-    const productIndex = db.products.findIndex(p => p.id === parseInt(productId));
-    if (productIndex === -1) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
-    const customerIndex = db.customers.findIndex(c => c.id === parseInt(customerId));
-    if (customerId && customerIndex === -1) {
-      return res.status(404).json({ error: 'Customer not found' });
-    }
+    const productIndex = db.products.findIndex((p) => p.id === parseInt(productId));
+    if (productIndex === -1) return res.status(404).json({ error: 'Product not found' });
+    const customerIndex = db.customers.findIndex((c) => c.id === parseInt(customerId));
+    if (customerId && customerIndex === -1) return res.status(404).json({ error: 'Customer not found' });
+
     const product = db.products[productIndex];
     const parsedQuantity = parseInt(quantity);
-    if (isNaN(parsedQuantity) || parsedQuantity <= 0) {
-      return res.status(400).json({ error: 'Invalid quantity' });
-    }
-    if (type === 'add') {
-      product.quantity += parsedQuantity;
-    } else if (type === 'deduct') {
-      if (product.quantity < parsedQuantity) {
-        return res.status(400).json({ error: 'Insufficient stock' });
-      }
+    if (isNaN(parsedQuantity) || parsedQuantity <= 0) return res.status(400).json({ error: 'Invalid quantity' });
+
+    if (type === 'add') product.quantity += parsedQuantity;
+    else if (type === 'deduct') {
+      if (product.quantity < parsedQuantity) return res.status(400).json({ error: 'Insufficient stock' });
       product.quantity -= parsedQuantity;
-    } else {
-      return res.status(400).json({ error: 'Invalid transaction type' });
-    }
+    } else return res.status(400).json({ error: 'Invalid transaction type' });
+
     const transaction = {
       id: Date.now(),
       productId: parseInt(productId),
@@ -248,7 +230,6 @@ app.post('/api/transactions', async (req, res) => {
   }
 });
 
-// Get transaction history
 app.get('/api/transactions', async (req, res) => {
   try {
     const db = await readDB();
@@ -258,6 +239,16 @@ app.get('/api/transactions', async (req, res) => {
   }
 });
 
+/*
+// Optional: Serve React frontend build
+const frontendPath = path.join(__dirname, '../frontend/build');
+app.use(express.static(frontendPath));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'index.html'));
+});
+*/
+
+// Start server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
