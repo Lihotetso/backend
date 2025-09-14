@@ -1,0 +1,62 @@
+{
+  "products": [
+    {
+      "id": 1757846333130,
+      "name": "Eggs",
+      "description": "Protein",
+      "category": "Food",
+      "price": 20,
+      "quantity": 5
+    },
+    {
+      "id": 1757846756538,
+      "name": "coke",
+      "description": "drink",
+      "category": "seno",
+      "price": 20,
+      "quantity": 25
+    }
+  ],
+  "transactions": [
+    {
+      "id": 1757846347264,
+      "productId": 1757846333130,
+      "customerId": null,
+      "quantity": 2,
+      "type": "deduct",
+      "timestamp": "2025-09-14T10:39:07.262Z"
+    },
+    {
+      "id": 1757846573254,
+      "productId": 1757846333130,
+      "customerId": 1757846562520,
+      "quantity": 5,
+      "type": "deduct",
+      "timestamp": "2025-09-14T10:42:53.253Z"
+    },
+    {
+      "id": 1757846733031,
+      "productId": 1757846333130,
+      "customerId": null,
+      "quantity": 2,
+      "type": "add",
+      "timestamp": "2025-09-14T10:45:33.039Z"
+    },
+    {
+      "id": 1757846774933,
+      "productId": 1757846756538,
+      "customerId": 1757846562520,
+      "quantity": 5,
+      "type": "deduct",
+      "timestamp": "2025-09-14T10:46:14.935Z"
+    }
+  ],
+  "customers": [
+    {
+      "id": 1757846562520,
+      "name": "Lihotetso Maseka",
+      "email": "masekalihotetso@gmail.com",
+      "phone": "62168628"
+    }
+  ]
+}
